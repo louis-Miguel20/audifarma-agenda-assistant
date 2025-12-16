@@ -1,3 +1,4 @@
+[![CI](https://github.com/louis-Miguel20/audifarma-agenda-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/louis-Miguel20/audifarma-agenda-assistant/actions/workflows/ci.yml)
 # Asistente de IA: Agenda con LangChain y Streamlit
 
 ## Arquitectura
