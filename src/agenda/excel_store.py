@@ -5,20 +5,34 @@ import pandas as pd
 
 
 class AgendaStore:
+    # Almacén de eventos con persistencia en Excel (agenda.xlsx)
+    # - Columnas: Evento, Fecha, Hora
+    # - Operaciones: agregar, eliminar, consultar por fecha, listar todo
     def __init__(self, path: Optional[str] = None):
+        # Preparar ruta base y carpeta data/
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         data_dir = os.path.join(base_dir, "data")
         os.makedirs(data_dir, exist_ok=True)
+        # Usar path pasado o data/agenda.xlsx
         self.path = path or os.path.join(data_dir, "agenda.xlsx")
         self.columns = ["Evento", "Fecha", "Hora"]
         self._ensure_file()
 
     def _ensure_file(self) -> None:
+        # Crea o normaliza el Excel con las columnas esperadas
         if not os.path.exists(self.path):
+            # Crear archivo vacío con cabeceras
             df = pd.DataFrame(columns=self.columns)
             df.to_excel(self.path, index=False, engine="openpyxl")
         else:
-            df = pd.read_excel(self.path, engine="openpyxl")
+            try:
+                # Leer y validar columnas
+                df = pd.read_excel(self.path, engine="openpyxl")
+            except Exception:
+                # Si el archivo está corrupto, regenerarlo con columnas vacías
+                df = pd.DataFrame(columns=self.columns)
+                df.to_excel(self.path, index=False, engine="openpyxl")
+                return
             missing = [c for c in self.columns if c not in df.columns]
             if missing:
                 for c in missing:
@@ -27,12 +41,19 @@ class AgendaStore:
                 df.to_excel(self.path, index=False, engine="openpyxl")
 
     def _read(self) -> pd.DataFrame:
-        return pd.read_excel(self.path, engine="openpyxl")
+        # Lee el Excel y devuelve DataFrame; si falla, regenera y reintenta
+        try:
+            return pd.read_excel(self.path, engine="openpyxl")
+        except Exception:
+            self._ensure_file()
+            return pd.read_excel(self.path, engine="openpyxl")
 
     def _write(self, df: pd.DataFrame) -> None:
+        # Escribe el DataFrame a disco
         df.to_excel(self.path, index=False, engine="openpyxl")
 
     def add_event(self, evento: str, fecha: str, hora: str) -> None:
+        # Agrega un evento tras validar formatos de fecha y hora
         self._validate_fecha(fecha)
         self._validate_hora(hora)
         df = self._read()
@@ -41,6 +62,7 @@ class AgendaStore:
         self._write(df)
 
     def delete_event(self, evento: str, fecha: Optional[str] = None, hora: Optional[str] = None) -> int:
+        # Elimina eventos por nombre; puede filtrar por fecha y hora
         df = self._read()
         mask = df["Evento"].str.strip().str.lower() == evento.strip().lower()
         if fecha:
@@ -56,17 +78,21 @@ class AgendaStore:
         return count
 
     def query_by_date(self, fecha: str) -> List[dict]:
+        # Devuelve eventos que coinciden con una fecha YYYY-MM-DD
         self._validate_fecha(fecha)
         df = self._read()
         result = df[df["Fecha"].astype(str).str.strip() == fecha.strip()]
         return result.to_dict(orient="records")
 
     def all_events(self) -> List[dict]:
+        # Lista todos los eventos almacenados
         df = self._read()
         return df.to_dict(orient="records")
 
     def _validate_fecha(self, fecha: str) -> None:
+        # Valida formato de fecha YYYY-MM-DD
         datetime.strptime(fecha, "%Y-%m-%d")
 
     def _validate_hora(self, hora: str) -> None:
+        # Valida formato de hora HH:MM (24h)
         datetime.strptime(hora, "%H:%M")

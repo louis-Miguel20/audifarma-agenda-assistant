@@ -11,7 +11,7 @@ def test_agent_tools_add_and_query(tmp_path):
         if t.name == "agregar_evento":
             t.invoke({"evento": "Almuerzo", "fecha": "2025-12-21", "hora": "13:00"})
             break
-    llm = ChatOpenAI(model="gpt-4o-mini", api_key="sk-test")
+    llm = ChatOpenAI(model="gpt-5-nano", api_key="sk-test")
     agent = build_agent(store=store, llm=llm)
     rows = store.query_by_date("2025-12-21")
     assert len(rows) == 1
