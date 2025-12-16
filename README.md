@@ -21,12 +21,12 @@
 
 ## Ejecución
 1. Crear entorno y dependencias:
-   - `make setup`
+   - `make setup` o `pip install --user -r requirements.txt`
 2. Ejecutar la app:
-   - `make run`
+   - `make run` o `streamlit run src/app.py`
    - Abrir `http://localhost:8501`
 3. Pruebas:
-   - `make test`
+   - `make test` o `pytest tests/`
 
 ## Memoria de conversación
 - La memoria se gestiona con LangGraph y `MemorySaver` por hilo de conversación.

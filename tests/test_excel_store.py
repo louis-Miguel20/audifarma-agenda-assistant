@@ -1,4 +1,3 @@
-import os
 from agenda.excel_store import AgendaStore
 
 
